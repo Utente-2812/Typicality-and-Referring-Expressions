@@ -17,6 +17,7 @@
 
 # Libraries ---------------------------------------------------------------
 library(brant)
+library(ggplot2)
 library(GGally)
 library(caret)
 library(InformationValue)
@@ -50,10 +51,13 @@ library(ggrepel)
 library(AER)
 library(stargazer)
 library(sandwich)
+library(caret)
+library(devtools)
+devtools::install_github('topepo/caret/pkg/caret')
 
 # Upload the data ---------------------------------------------------------
 dataFrameFull <- read_csv("dataFrameFull2.csv")
-
+dataFrameFull$X1 <- NULL
 # Rename columns ---------------------------------------------------------
 dataFrameFull$category[dataFrameFull$category=='1'] <- 'role'
 dataFrameFull$category[dataFrameFull$category=='0'] <- 'taxonomic'
@@ -94,6 +98,8 @@ plot(density(only_role$mean_judgement),
      main = "Density plot of mean judgments", xlab = "role names judgments")
 plot(density(only_taxa$mean_judgement), 
      main = "Density plot of mean judgments", xlab = "taxonomic names judgments")
+plot(density(dataFrameFull$mean_judgement), 
+     main = "Density plot of mean judgments", xlab = "Mean judgments") # all data 
 
 # Normal distribution test ---------------------------------------------------------
 shapiro.test(only_role$mean_judgement) #  the distribution is non-normal
@@ -102,19 +108,20 @@ shapiro.test(only_taxa$mean_judgement) #  the distribution is normal
 # Descriptive stats ---------------------------------------------------------
 
 # Plot mean ratings by group 
-p_1 <- ggboxplot(dataFrameFull, x = "category", y = "mean_judgement", 
+p_1 <- ggplot(dataFrameFull, x = "category", y = "mean_judgement", 
           color = "category", palette = c("#00AFBB", "#E7B800"),
           ylab = "Typicality Ratings", xlab = "Category") +
           geom_jitter(aes(colour = category), size = 1) 
   
 p_1 
 
-p_2 <- ggplot(dataFrameFull, aes(x = category, y = mean_judgement, fill = category)) + 
+p_2 <- ggplot(dataFrameFull, aes(x = category, y = mean_judgement,
+                                 fill = category)) + 
               geom_boxplot(alpha=0.3) +
               geom_jitter(aes(colour = category), size = 1) + 
               facet_grid(~original_label_topname) +
               theme_bw() + 
-              xlab("Name agreement") + ylab("Typicality Ratings") 
+              xlab("Category") + ylab("Typicality Ratings") 
 p_2
 
 # Raincloud plots ----
@@ -189,6 +196,10 @@ p_cor_role <- ggplot(only_role) +
                       axis.text = element_text(size = 12))
 
 p_cor_role
+
+x = dataFrameFull[dataFrameFull$mean_judgement, dataFrameFull$perc_role, dataFrameFull$perc_taxa]
+cor(select(dataFrameFull, mean_judgement, perc_role, perc_taxa))
+
 
 # Inter-annotator agreement  ---------------------------------------------------------
 # The level of agreement between the 5 non-unique raters
